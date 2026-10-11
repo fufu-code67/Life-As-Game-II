@@ -2,21 +2,36 @@
   import { bootApp, type AppContext } from '../bootstrap';
   import QuestQuickEntry from './QuestQuickEntry.svelte';
   import TodayList from './TodayList.svelte';
-  import { onMount } from 'svelte';
+  import { onMount, onDestroy } from 'svelte';
   import type { Quest } from '@core/types';
+  import { mountVillage } from '@game/main';
 
   let ctx: AppContext | null = null;
   let error = '';
   let quests: Quest[] = [];
   let streakCurrent = 0;
+  let villageContainer: HTMLDivElement | undefined;
+  let destroyVillage: (() => void) | undefined;
 
   onMount(async () => {
     try {
       const c = await bootApp();
       ctx = c;
       await refresh(c);
+      // Mount village below quest UI
+      if (villageContainer) {
+        destroyVillage = mountVillage(villageContainer, {
+          onBuildingEnter: (id) => console.log('[Today] Building entered:', id),
+        });
+      }
     } catch (e) {
       error = String(e);
+    }
+  });
+
+  onDestroy(() => {
+    if (destroyVillage) {
+      destroyVillage();
     }
   });
 
@@ -57,6 +72,9 @@
   {:else if ctx}
     <QuestQuickEntry onCreate={quickCreate} />
     <TodayList {quests} onComplete={complete} onArchive={archive} />
+    <section>
+      <div bind:this={villageContainer} id="village" style="height: 480px; border: 1px solid #555; margin-top: 1rem;"></div>
+    </section>
   {:else}
     <p>Loading…</p>
   {/if}
