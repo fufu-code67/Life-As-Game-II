@@ -17,7 +17,7 @@ export class VillageScene extends Phaser.Scene {
   private player!: Phaser.Types.Physics.Arcade.SpriteWithDynamicBody;
   private groundLayer!: Phaser.Tilemaps.TilemapLayer;
   private buildingObjects: {
-    sprite: Phaser.GameObjects.Rectangle;
+    sprite: Phaser.GameObjects.Image;
     label: Phaser.GameObjects.Text;
     spec: BuildingSpec;
   }[] = [];
@@ -46,6 +46,9 @@ export class VillageScene extends Phaser.Scene {
       frameWidth: 16,
       frameHeight: 16,
     });
+    for (const spec of VILLAGE_MAP.buildings) {
+      this.load.image(`bld_${spec.id}`, `assets/generated/buildings/${spec.id}_stage1.png`);
+    }
   }
 
   create(): void {
@@ -93,34 +96,28 @@ export class VillageScene extends Phaser.Scene {
     }
     this.player.anims.play('walk_down');
 
-    // Buildings (placeholder rectangles with labels)
+    // Buildings (generated sprites, stage from skill levels later — Phase 3)
     for (const spec of VILLAGE_MAP.buildings) {
-      const color = spec.id === 'hero-house' ? 0x8b4513 :
-        spec.id === 'tavern' ? 0x2f4f4f :
-        spec.id === 'gym' ? 0x4682b4 :
-        spec.id === 'library' ? 0x556b2f :
-        0x8b0000; // market
-      const rect = this.add.rectangle(
-        spec.x * this.tileSize + (spec.wTiles * this.tileSize) / 2,
-        spec.y * this.tileSize + (spec.hTiles * this.tileSize) / 2,
-        spec.wTiles * this.tileSize,
-        spec.hTiles * this.tileSize,
-        color,
-      );
-      rect.setOrigin(0.5, 0.5);
-      rect.setDepth(DEPTHS.entity);
-      rect.setInteractive();
-      rect.on('pointerdown', () => this.onBuildingClick(spec));
       const displayName = spec.id.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase());
+      // Sprite anchor: bottom-center of the building footprint
+      const cx = spec.x * this.tileSize + (spec.wTiles * this.tileSize) / 2;
+      const bottomY = (spec.y + spec.hTiles) * this.tileSize;
+      const img = this.add.image(cx, bottomY, `bld_${spec.id}`);
+      img.setOrigin(0.5, 1);
+      // Scale sprite to cover footprint width (sprite is 48px wide)
+      const targetW = spec.wTiles * this.tileSize;
+      img.setScale(targetW / 48);
+      img.setInteractive({ pixelPerfect: true });
+      img.on('pointerdown', () => this.onBuildingClick(spec));
       const label = this.add.text(
-        spec.x * this.tileSize + (spec.wTiles * this.tileSize) / 2,
-        spec.y * this.tileSize + (spec.hTiles * this.tileSize) / 2,
+        cx,
+        bottomY - 52 * (targetW / 48) - 4,
         displayName,
         { fontSize: '10px', color: '#ffffff', align: 'center' },
       );
       label.setOrigin(0.5, 0.5);
       label.setDepth(DEPTHS.entity + 1);
-      this.buildingObjects.push({ sprite: rect, label, spec });
+      this.buildingObjects.push({ sprite: img, label, spec });
     }
 
     // Tooltip for building interaction
@@ -135,7 +132,7 @@ export class VillageScene extends Phaser.Scene {
     // Camera
     this.cameras.main.startFollow(this.player);
     this.cameras.main.setBounds(0, 0, this.mapWidth * this.tileSize, this.mapHeight * this.tileSize);
-    this.cameras.main.setZoom(3);
+    this.cameras.main.setZoom(2);
     this.cameras.main.roundPixels = true;
 
     // Input: tap/click to move
