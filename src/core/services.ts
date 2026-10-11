@@ -70,5 +70,4 @@ export interface SkillService {
   createFromAIProposal(proposal: { name: string; attribute: string; description: string; icon: string }): Promise<Skill>;
 }
 
-/** Name normalization contract (ai/normalize.ts): 1–2 words, TitleCase, no punctuation. */
-export function normalizeSkillName(raw: string): string;
+/** Name normalization contract — implemented in ai/normalize.ts: 1–2 words, TitleCase, no punctuation. */
