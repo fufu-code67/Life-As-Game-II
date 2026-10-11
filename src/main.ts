@@ -1,6 +1,5 @@
-import App from '@ui/App.svelte';
+import { mount } from 'svelte';
+import Today from '@ui/Today.svelte';
 import '@ui/app.css';
 
-const app = new App({ target: document.getElementById('app')! });
-
-export default app;
+mount(Today, { target: document.getElementById('app')! });

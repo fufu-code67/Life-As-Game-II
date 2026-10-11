@@ -26,5 +26,5 @@
       "@ai/*": ["src/ai/*"]
     }
   },
-  "include": ["src/**/*.ts", "src/**/*.svelte", "tests/**/*.ts"]
+  "include": ["src/**/*.ts", "src/**/*.svelte", "tests/core/**/*.ts"]
 }
