@@ -1,0 +1,17 @@
+:root {
+  --bg: #1a1c2c;
+  --text: #f4f4f4;
+  --accent: #ffd54f;
+}
+html,
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Segoe UI', system-ui, sans-serif;
+}
+main {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 2rem;
+}
