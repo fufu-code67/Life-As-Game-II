@@ -2,14 +2,18 @@
   import { bootApp, type AppContext } from '../bootstrap';
   import QuestQuickEntry from './QuestQuickEntry.svelte';
   import TodayList from './TodayList.svelte';
+  import SkillList from './SkillList.svelte';
+  import Toast from './Toast.svelte';
   import { onMount, onDestroy } from 'svelte';
-  import type { Quest } from '@core/types';
+  import type { Quest, Skill } from '@core/types';
   import { mountVillage } from '@game/main';
 
   let ctx: AppContext | null = null;
   let error = '';
   let quests: Quest[] = [];
+  let skills: Skill[] = [];
   let streakCurrent = 0;
+  let skillListOpen = false;
   let villageContainer: HTMLDivElement | undefined;
   let destroyVillage: (() => void) | undefined;
 
@@ -21,7 +25,7 @@
       // Mount village below quest UI
       if (villageContainer) {
         destroyVillage = mountVillage(villageContainer, {
-          onBuildingEnter: (id) => console.log('[Today] Building entered:', id),
+          onBuildingEnter: handleBuildingEnter,
         });
       }
     } catch (e) {
@@ -37,6 +41,7 @@
 
   async function refresh(c: AppContext) {
     quests = await c.quests.listQuests('open');
+    skills = await c.skills.list();
     const streak = await c.streaks.get();
     streakCurrent = streak.current;
   }
@@ -59,12 +64,29 @@
     await ctx.quests.createQuest({ title, categoryId: 'productivity' });
     await refresh(ctx);
   }
+
+  /** Village building click handler: tavern → quest list, library → skill overlay. */
+  function handleBuildingEnter(buildingId: string) {
+    if (buildingId === 'tavern') {
+      // Quest list is already visible in Today — just scroll to it / no-op
+      return;
+    }
+    if (buildingId === 'library') {
+      skillListOpen = true;
+      return;
+    }
+    // Other buildings: console-only for now
+    console.log('[Today] Building entered:', buildingId);
+  }
 </script>
 
 <main>
   <header>
     <h1>LifeAsGame II</h1>
-    <span class="streak" title="Streak">🔥 {streakCurrent}</span>
+    <div class="header-right">
+      <button class="skills-btn" on:click={() => { skillListOpen = !skillListOpen; }} aria-label="Toggle skill list">Skills</button>
+      <span class="streak" title="Streak">🔥 {streakCurrent}</span>
+    </div>
   </header>
 
   {#if error}
@@ -75,6 +97,8 @@
     <section>
       <div bind:this={villageContainer} id="village" style="height: 480px; border: 1px solid #555; margin-top: 1rem;"></div>
     </section>
+    <SkillList {skills} bind:open={skillListOpen} />
+    <Toast bus={ctx.bus} {skills} />
   {:else}
     <p>Loading…</p>
   {/if}
@@ -85,6 +109,23 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
+  }
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+  }
+  .skills-btn {
+    background: none;
+    border: 1px solid #666;
+    border-radius: 6px;
+    color: inherit;
+    padding: 0.2rem 0.6rem;
+    cursor: pointer;
+    font-size: 0.85rem;
+  }
+  .skills-btn:hover {
+    border-color: #aaa;
   }
   .streak {
     font-size: 1.2rem;
