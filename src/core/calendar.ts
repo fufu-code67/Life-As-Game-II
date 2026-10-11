@@ -20,10 +20,6 @@ function dateToStartsAt(date: string): string {
   return `${date}T00:00`;
 }
 
-/** Extract the yyyy-mm-dd date portion from a startsAt string. */
-function startsAtToDate(startsAt: string): string {
-  return startsAt.slice(0, 10);
-}
 
 export function createCalendarService(
   db: LagDB,
