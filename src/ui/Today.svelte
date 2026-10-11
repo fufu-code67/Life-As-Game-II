@@ -101,7 +101,7 @@
       <div bind:this={villageContainer} id="village" style="height: 480px; border: 1px solid #555; margin-top: 1rem;"></div>
     </section>
     <SkillList {skills} bind:open={skillListOpen} />
-    <WeekCalendar calendar={ctx.calendar} questService={ctx.quests} bind:open={calendarOpen} />
+    <WeekCalendar calendar={ctx.calendar} questService={ctx.quests} bus={ctx.bus} bind:open={calendarOpen} />
     <Toast bus={ctx.bus} {skills} />
   {:else}
     <p>Loading…</p>

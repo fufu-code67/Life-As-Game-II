@@ -3,13 +3,14 @@
    * WeekCalendar — Mon-Sun week view with per-day event list,
    * inline add form, and delete button per event.
    */
-  import type { CalendarEvent, Quest } from '@core/types';
+  import type { CalendarEvent, EventBus, Quest } from '@core/types';
   import type { CalendarService, QuestService } from '@core/services';
   import { CATEGORIES } from '@data/categories';
   import { onMount, onDestroy } from 'svelte';
 
   export let calendar: CalendarService;
-  export let questService: QuestService | null = null;
+  export let questService: QuestService;
+  export let bus: EventBus;
   export let open = false;
 
   // Current week anchor (Monday of the displayed week)
@@ -29,6 +30,10 @@
   let offDeleted: (() => void) | undefined;
 
   onMount(async () => {
+    // Re-refresh whenever any calendar event changes (from anywhere in the app)
+    offCreated = bus.on('calendar:event:created', () => { void refresh(); });
+    offUpdated = bus.on('calendar:event:updated', () => { void refresh(); });
+    offDeleted = bus.on('calendar:event:deleted', () => { void refresh(); });
     await refresh();
     // Also load open quests for the "Link quest" select
     if (questService) {
@@ -172,7 +177,7 @@
               <button class="add-btn" on:click={() => startAdd(day.date)} aria-label="Add event">+</button>
             </div>
             <ul class="event-list">
-              {#each eventsForDay(day.date) as ev (ev.id)}
+              {#each events.filter((e) => e.startsAt.startsWith(day.date)) as ev (ev.id)}
                 <li>
                   <span class="dot" style="background: {categoryColor(ev.categoryId)}"></span>
                   <span class="ev-title">{ev.title}</span>
