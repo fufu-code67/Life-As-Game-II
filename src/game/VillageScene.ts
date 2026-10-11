@@ -18,7 +18,6 @@ export class VillageScene extends Phaser.Scene {
   private groundLayer!: Phaser.Tilemaps.TilemapLayer;
   private buildingObjects: {
     sprite: Phaser.GameObjects.Image;
-    label: Phaser.GameObjects.Text;
     spec: BuildingSpec;
   }[] = [];
   private tooltipText!: Phaser.GameObjects.Text;
@@ -47,7 +46,8 @@ export class VillageScene extends Phaser.Scene {
       frameHeight: 16,
     });
     for (const spec of VILLAGE_MAP.buildings) {
-      this.load.image(`bld_${spec.id}`, `assets/generated/buildings/${spec.id}_stage1.png`);
+      const file = spec.id === 'hero-house' ? 'hero' : spec.id;
+      this.load.image(`bld_${spec.id}`, `assets/village/building-${file}.png`);
     }
   }
 
@@ -98,26 +98,18 @@ export class VillageScene extends Phaser.Scene {
 
     // Buildings (generated sprites, stage from skill levels later — Phase 3)
     for (const spec of VILLAGE_MAP.buildings) {
-      const displayName = spec.id.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase());
       // Sprite anchor: bottom-center of the building footprint
       const cx = spec.x * this.tileSize + (spec.wTiles * this.tileSize) / 2;
       const bottomY = (spec.y + spec.hTiles) * this.tileSize;
       const img = this.add.image(cx, bottomY, `bld_${spec.id}`);
       img.setOrigin(0.5, 1);
-      // Scale sprite to cover footprint width (sprite is 48px wide)
-      const targetW = spec.wTiles * this.tileSize;
-      img.setScale(targetW / 48);
+      // v2 sprites are ~512px tall; scale so height ≈ footprint h + 1.5 tiles (roof overhang)
+      const srcH = img.height; // 512 (376-512 wide)
+      const targetH = (spec.hTiles + 1.5) * this.tileSize;
+      img.setScale(targetH / srcH);
       img.setInteractive({ pixelPerfect: true });
       img.on('pointerdown', () => this.onBuildingClick(spec));
-      const label = this.add.text(
-        cx,
-        bottomY - 52 * (targetW / 48) - 4,
-        displayName,
-        { fontSize: '10px', color: '#ffffff', align: 'center' },
-      );
-      label.setOrigin(0.5, 0.5);
-      label.setDepth(DEPTHS.entity + 1);
-      this.buildingObjects.push({ sprite: img, label, spec });
+      this.buildingObjects.push({ sprite: img, spec });
     }
 
     // Tooltip for building interaction
@@ -143,7 +135,6 @@ export class VillageScene extends Phaser.Scene {
       this.player.setDepth(DEPTHS.entity + Math.floor(this.player.y / this.tileSize));
       for (const b of this.buildingObjects) {
         b.sprite.setDepth(DEPTHS.entity + Math.floor(b.sprite.y / this.tileSize));
-        b.label.setDepth(DEPTHS.entity + 1 + Math.floor(b.label.y / this.tileSize));
       }
     });
 
