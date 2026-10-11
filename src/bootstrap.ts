@@ -8,6 +8,7 @@ import { createQuestService } from '@core/quests';
 import { createXpService } from '@core/xp';
 import { createStreakService } from '@core/streaks';
 import { createSkillService } from '@core/skills';
+import { createCalendarService } from '@core/calendar';
 import { SKILL_SEEDS } from '@data/skillSeeds';
 import { matchQuestToSkill } from '@ai/skillMatcher';
 import { getApiKey } from '@ai/config';
@@ -16,6 +17,7 @@ import type { QuestService } from '@core/services';
 import type { XpService } from '@core/services';
 import type { StreakService } from '@core/services';
 import type { SkillService } from '@core/services';
+import type { CalendarService } from '@core/services';
 
 export interface AppContext {
   bus: EventBus;
@@ -23,6 +25,7 @@ export interface AppContext {
   xp: XpService;
   streaks: StreakService;
   skills: SkillService;
+  calendar: CalendarService;
 }
 
 let ctx: AppContext | null = null;
@@ -37,6 +40,7 @@ export async function bootApp(): Promise<AppContext> {
   const xp = createXpService(db, bus);
   const streaks = createStreakService(db, bus);
   const quests = createQuestService(db, bus, xp, streaks);
+  const calendar = createCalendarService(db, bus);
 
   // Seed skills once (empty DB only) — afterwards the DB is authoritative.
   const existing = await skills.list();
@@ -87,6 +91,6 @@ export async function bootApp(): Promise<AppContext> {
     await xp.applySkillXp(skillId, xpGained);
   });
 
-  ctx = { bus, quests, xp, streaks, skills };
+  ctx = { bus, quests, xp, streaks, skills, calendar };
   return ctx;
 }

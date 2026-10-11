@@ -1,4 +1,4 @@
-import type { Quest, Skill, StreakState, QuestDifficulty, SkillMatchResult } from './types';
+import type { Quest, Skill, StreakState, QuestDifficulty, SkillMatchResult, CalendarEvent } from './types';
 
 /**
  * Core service contracts — FROZEN in Phase 1.
@@ -68,6 +68,32 @@ export interface SkillService {
 
   /** Create a skill from an AI proposal with normalization applied. Emits `skill:created`. */
   createFromAIProposal(proposal: { name: string; attribute: string; description: string; icon: string }): Promise<Skill>;
+}
+
+export interface CalendarService {
+  /** Create a calendar event. `date` is ISO yyyy-mm-dd. Emits calendar:event:created. */
+  addEvent(input: {
+    title: string;
+    date: string; // ISO yyyy-mm-dd
+    categoryId?: string | null;
+    durationMin?: number;
+    questId?: string; // TODO: wire to CalendarEvent when schema supports it
+  }): Promise<CalendarEvent>;
+
+  /** Update mutable fields. Emits calendar:event:updated. */
+  updateEvent(id: string, patch: Partial<Pick<CalendarEvent, 'title' | 'startsAt' | 'durationMin' | 'categoryId'>>): Promise<CalendarEvent>;
+
+  /** Delete an event. Emits calendar:event:deleted. */
+  removeEvent(id: string): Promise<void>;
+
+  /** List events for a single day (ISO yyyy-mm-dd). */
+  listByDay(date: string): Promise<CalendarEvent[]>;
+
+  /** List events in a date range (fromISO and toISO are yyyy-mm-dd strings). */
+  listRange(fromISO: string, toISO: string): Promise<CalendarEvent[]>;
+
+  /** Convenience: list events for today. */
+  eventsForToday(): Promise<CalendarEvent[]>;
 }
 
 /** Name normalization contract — implemented in ai/normalize.ts: 1–2 words, TitleCase, no punctuation. */

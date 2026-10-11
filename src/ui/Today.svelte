@@ -3,6 +3,7 @@
   import QuestQuickEntry from './QuestQuickEntry.svelte';
   import TodayList from './TodayList.svelte';
   import SkillList from './SkillList.svelte';
+  import WeekCalendar from './WeekCalendar.svelte';
   import Toast from './Toast.svelte';
   import { onMount, onDestroy } from 'svelte';
   import type { Quest, Skill } from '@core/types';
@@ -14,6 +15,7 @@
   let skills: Skill[] = [];
   let streakCurrent = 0;
   let skillListOpen = false;
+  let calendarOpen = false;
   let villageContainer: HTMLDivElement | undefined;
   let destroyVillage: (() => void) | undefined;
 
@@ -85,6 +87,7 @@
     <h1>LifeAsGame II</h1>
     <div class="header-right">
       <button class="skills-btn" on:click={() => { skillListOpen = !skillListOpen; }} aria-label="Toggle skill list">Skills</button>
+      <button class="skills-btn" on:click={() => { calendarOpen = !calendarOpen; }} aria-label="Toggle calendar">Calendar</button>
       <span class="streak" title="Streak">🔥 {streakCurrent}</span>
     </div>
   </header>
@@ -98,6 +101,7 @@
       <div bind:this={villageContainer} id="village" style="height: 480px; border: 1px solid #555; margin-top: 1rem;"></div>
     </section>
     <SkillList {skills} bind:open={skillListOpen} />
+    <WeekCalendar calendar={ctx.calendar} questService={ctx.quests} bind:open={calendarOpen} />
     <Toast bus={ctx.bus} {skills} />
   {:else}
     <p>Loading…</p>
